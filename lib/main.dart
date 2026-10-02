@@ -26,7 +26,12 @@ class GameEnginesPage extends StatelessWidget {
       appBar: AppBar(
         title: const Text(
           'Справочник',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 26,
+            fontFamily: 'Oswald',
+            letterSpacing: 1.5,
+          ), //TextStyle
         ), //Text
         centerTitle: true,
         backgroundColor: Colors.deepPurple,
@@ -48,8 +53,8 @@ class GameEnginesPage extends StatelessWidget {
               child: const Text(
                 'Игровые движки',
                 style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 30,
+                  fontFamily: 'Oswald',
                   color: Colors.deepPurple,
                 ), //TextStyle
               ), //Text
@@ -76,65 +81,7 @@ class GameEnginesPage extends StatelessWidget {
             const Divider(color: Colors.deepPurple, thickness: 1),
             const SizedBox(height: 16),
             // Картинка и список популярных движков
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Container(
-                    height: 190,
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade400),
-                      borderRadius: BorderRadius.circular(12),
-                    ), //BoxDecoration
-                    child: Center(
-                      child: Image.asset(
-                        'assets/images/game_engine.png',
-                        fit: BoxFit.contain,
-                      ), //Image.asset
-                    ), //Center
-                  ), //Container
-                ), //Expanded
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Container(
-                    height: 190,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade400),
-                      borderRadius: BorderRadius.circular(12),
-                    ), //BoxDecoration
-                    child: const Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 10,
-                      ), //EdgeInsets
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Популярные:',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ), //TextStyle
-                          ), //Text
-                          SizedBox(height: 8),
-                          Text('1. Unity', style: TextStyle(fontSize: 16)),
-                          SizedBox(height: 4),
-                          Text('2. Unreal Engine', style: TextStyle(fontSize: 16)),
-                          SizedBox(height: 4),
-                          Text('3. Godot', style: TextStyle(fontSize: 16)),
-                          SizedBox(height: 4),
-                          Text('4. CryEngine', style: TextStyle(fontSize: 16)),
-                          SizedBox(height: 4),
-                          Text('5. GameMaker', style: TextStyle(fontSize: 16)),
-                        ],
-                      ), //Column
-                    ), //Padding
-                  ), //Container
-                ), //Expanded
-              ],
-            ), //Row
+            const EngineShowcase(),
             const SizedBox(height: 24),
             // Автор: ФИО и номер группы
             Row(
@@ -173,5 +120,138 @@ class GameEnginesPage extends StatelessWidget {
         ), //Column
       ), //SingleChildScrollView
     ); //Scaffold
+  }
+}
+
+class EngineShowcase extends StatefulWidget {
+  const EngineShowcase({super.key});
+
+  @override
+  State<EngineShowcase> createState() => _EngineShowcaseState();
+}
+
+class _EngineShowcaseState extends State<EngineShowcase> {
+  final List<String> engineNames = [
+    'Unity',
+    'Unreal Engine',
+    'Godot',
+    'CryEngine',
+    'GameMaker',
+  ];
+
+  final List<String> engineImages = [
+    'assets/images/unity.png',
+    'assets/images/unreal.png',
+    'assets/images/godot.png',
+    'assets/images/cryengine.png',
+    'assets/images/gamemaker.png',
+  ];
+
+  int currentIndex = 0;
+
+  // Заранее загружаем все картинки, чтобы при смене не было пустой рамки
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    for (final path in engineImages) {
+      precacheImage(AssetImage(path), context);
+    }
+  }
+
+  // Циклическая смена изображения: после последнего снова первое
+  void nextImage() {
+    setState(() {
+      currentIndex = (currentIndex + 1) % engineImages.length;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Container(
+            height: 230,
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border.all(color: Colors.grey.shade400),
+              borderRadius: BorderRadius.circular(12),
+            ), //BoxDecoration
+            child: Column(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    // Нажатие срабатывает по всей области, а не только по логотипу
+                    behavior: HitTestBehavior.opaque,
+                    onTap: nextImage,
+                    child: Center(
+                      child: Image.asset(
+                        engineImages[currentIndex],
+                        fit: BoxFit.contain,
+                        gaplessPlayback: true,
+                      ), //Image.asset
+                    ), //Center
+                  ), //GestureDetector
+                ), //Expanded
+                const SizedBox(height: 8),
+                ElevatedButton.icon(
+                  onPressed: nextImage,
+                  icon: const Icon(Icons.navigate_next),
+                  label: const Text('Далее'),
+                ), //ElevatedButton
+              ],
+            ), //Column
+          ), //Container
+        ), //Expanded
+        const SizedBox(width: 16),
+        Expanded(
+          child: Container(
+            height: 230,
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.shade400),
+              borderRadius: BorderRadius.circular(12),
+            ), //BoxDecoration
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
+              ), //EdgeInsets
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Популярные:',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ), //TextStyle
+                  ), //Text
+                  const SizedBox(height: 8),
+                  for (int i = 0; i < engineNames.length; i++)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Text(
+                        '${i + 1}. ${engineNames[i]}',
+                        style: TextStyle(
+                          fontSize: 16,
+                          // Движок, который сейчас на картинке, выделяется
+                          fontWeight: i == currentIndex
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                          color: i == currentIndex
+                              ? Colors.deepPurple
+                              : Colors.black87,
+                        ), //TextStyle
+                      ), //Text
+                    ), //Padding
+                ],
+              ), //Column
+            ), //Padding
+          ), //Container
+        ), //Expanded
+      ],
+    ); //Row
   }
 }
