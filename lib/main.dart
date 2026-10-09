@@ -1,18 +1,69 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 void main() {
   runApp(const MyApp());
 }
 
+// Описание одного пункта справочника
+class GameEngine {
+  final String name;
+  final String description;
+  final String image;
+
+  const GameEngine({
+    required this.name,
+    required this.description,
+    required this.image,
+  });
+}
+
+const List<GameEngine> engines = [
+  GameEngine(
+    name: 'Unity',
+    description: 'Движок на C# для 2D и 3D',
+    image: 'assets/images/unity.png',
+  ),
+  GameEngine(
+    name: 'Unreal Engine',
+    description: 'Движок Epic Games на C++',
+    image: 'assets/images/unreal.png',
+  ),
+  GameEngine(
+    name: 'Godot',
+    description: 'Бесплатный, открытый код',
+    image: 'assets/images/godot.png',
+  ),
+  GameEngine(
+    name: 'CryEngine',
+    description: 'Движок Crytek, серия Crysis',
+    image: 'assets/images/cryengine.png',
+  ),
+  GameEngine(
+    name: 'GameMaker',
+    description: 'Простой движок для 2D-игр',
+    image: 'assets/images/gamemaker.png',
+  ),
+];
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Справочник: игровые движки',
-      home: GameEnginesPage(),
+      // Списки можно прокручивать перетаскиванием не только пальцем,
+      // но и мышью (при запуске в браузере или на Windows)
+      scrollBehavior: const MaterialScrollBehavior().copyWith(
+        dragDevices: {
+          PointerDeviceKind.touch,
+          PointerDeviceKind.mouse,
+          PointerDeviceKind.trackpad,
+        },
+      ),
+      home: const GameEnginesPage(),
     );
   }
 }
@@ -68,20 +119,18 @@ class GameEnginesPage extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ), //BoxDecoration
               child: const Text(
-                'Игровой движок — это программная платформа для создания '
-                'компьютерных игр. Он берёт на себя отрисовку графики, '
-                'физику, звук, анимацию, обработку ввода и работу со сценой, '
-                'позволяя разработчикам сосредоточиться на игровой логике. '
-                'Большинство движков поддерживают сборку одной игры сразу '
-                'под несколько платформ: ПК, консоли и мобильные устройства.',
+                'Игровой движок — программная платформа для создания игр. '
+                'Он берёт на себя графику, физику, звук и ввод, а разработчик '
+                'занимается игровой логикой.',
                 style: TextStyle(fontSize: 16, height: 1.4),
               ), //Text
             ), //Container
             const SizedBox(height: 16),
-            const Divider(color: Colors.deepPurple, thickness: 1),
+            // Горизонтальный список картинок
+            const EngineGallery(),
             const SizedBox(height: 16),
-            // Картинка и список популярных движков
-            const EngineShowcase(),
+            // Вертикальный список карточек
+            const EngineList(),
             const SizedBox(height: 24),
             // Автор: ФИО и номер группы
             Row(
@@ -123,135 +172,84 @@ class GameEnginesPage extends StatelessWidget {
   }
 }
 
-class EngineShowcase extends StatefulWidget {
-  const EngineShowcase({super.key});
+class EngineGallery extends StatelessWidget {
+  const EngineGallery({super.key});
 
   @override
-  State<EngineShowcase> createState() => _EngineShowcaseState();
+  Widget build(BuildContext context) {
+    // Горизонтальный ListView должен иметь ограниченную высоту
+    return SizedBox(
+      height: 140,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: engines.length,
+        separatorBuilder: (context, index) => const SizedBox(width: 12),
+        itemBuilder: (context, index) {
+          return ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Container(
+              width: 160,
+              padding: const EdgeInsets.all(16),
+              color: Colors.white,
+              child: Image.asset(
+                engines[index].image,
+                fit: BoxFit.contain,
+              ), //Image.asset
+            ), //Container
+          ); //ClipRRect
+        },
+      ), //ListView.separated
+    ); //SizedBox
+  }
 }
 
-class _EngineShowcaseState extends State<EngineShowcase> {
-  final List<String> engineNames = [
-    'Unity',
-    'Unreal Engine',
-    'Godot',
-    'CryEngine',
-    'GameMaker',
-  ];
+class EngineList extends StatelessWidget {
+  const EngineList({super.key});
 
-  final List<String> engineImages = [
-    'assets/images/unity.png',
-    'assets/images/unreal.png',
-    'assets/images/godot.png',
-    'assets/images/cryengine.png',
-    'assets/images/gamemaker.png',
-  ];
-
-  int currentIndex = 0;
-
-  // Заранее загружаем все картинки, чтобы при смене не было пустой рамки
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    for (final path in engineImages) {
-      precacheImage(AssetImage(path), context);
-    }
-  }
-
-  // Циклическая смена изображения: после последнего снова первое
-  void nextImage() {
-    setState(() {
-      currentIndex = (currentIndex + 1) % engineImages.length;
-    });
+  void showEngineName(BuildContext context, String name) {
+    ScaffoldMessenger.of(context)
+      // Убираем предыдущее уведомление, чтобы они не копились в очереди
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text('Выбран движок: $name'),
+          duration: const Duration(seconds: 2),
+        ), //SnackBar
+      );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: Container(
-            height: 230,
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.all(color: Colors.grey.shade400),
-              borderRadius: BorderRadius.circular(12),
-            ), //BoxDecoration
-            child: Column(
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    // Нажатие срабатывает по всей области, а не только по логотипу
-                    behavior: HitTestBehavior.opaque,
-                    onTap: nextImage,
-                    child: Center(
-                      child: Image.asset(
-                        engineImages[currentIndex],
-                        fit: BoxFit.contain,
-                        gaplessPlayback: true,
-                      ), //Image.asset
-                    ), //Center
-                  ), //GestureDetector
-                ), //Expanded
-                const SizedBox(height: 8),
-                ElevatedButton.icon(
-                  onPressed: nextImage,
-                  icon: const Icon(Icons.navigate_next),
-                  label: const Text('Далее'),
-                ), //ElevatedButton
-              ],
-            ), //Column
-          ), //Container
-        ), //Expanded
-        const SizedBox(width: 16),
-        Expanded(
-          child: Container(
-            height: 230,
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade400),
-              borderRadius: BorderRadius.circular(12),
-            ), //BoxDecoration
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 10,
-              ), //EdgeInsets
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Популярные:',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ), //TextStyle
-                  ), //Text
-                  const SizedBox(height: 8),
-                  for (int i = 0; i < engineNames.length; i++)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: Text(
-                        '${i + 1}. ${engineNames[i]}',
-                        style: TextStyle(
-                          fontSize: 16,
-                          // Движок, который сейчас на картинке, выделяется
-                          fontWeight: i == currentIndex
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                          color: i == currentIndex
-                              ? Colors.deepPurple
-                              : Colors.black87,
-                        ), //TextStyle
-                      ), //Text
-                    ), //Padding
-                ],
-              ), //Column
-            ), //Padding
-          ), //Container
-        ), //Expanded
-      ],
-    ); //Row
+    return ListView.builder(
+      // Список внутри SingleChildScrollView: высота по содержимому,
+      // прокручивается вместе со всей страницей
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: engines.length,
+      itemBuilder: (context, index) {
+        final engine = engines[index];
+        return Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ), //RoundedRectangleBorder
+          child: ListTile(
+            leading: const Icon(
+              Icons.sports_esports,
+              color: Colors.deepPurple,
+              size: 32,
+            ), //Icon
+            title: Text(
+              engine.name,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ), //Text
+            subtitle: Text(engine.description),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 18),
+            onTap: () => showEngineName(context, engine.name),
+          ), //ListTile
+        ); //Card
+      },
+    ); //ListView.builder
   }
 }
